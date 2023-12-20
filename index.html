@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+    	body{
+    	text-align: center;
+    	width:100%;
+    	}
+        .grid-container {
+            display: grid;
+            gap: 3px;
+            max-width: 100%;
+        }
+        .grid-item {
+            border: 1px solid rgba(0, 0, 0, 0.8);
+            font-size: 16px;
+            text-align: center;
+            width: auto;
+            height: 20px; /* 高さを設定 */
+            overflow: hidden; /* はみ出したテキストを非表示に */
+        }
+    </style>
+</head>
+<body>
+
+<h1>動的グリッドジェネレータ</h1>
+
+
+
+
+<label for="rows">行数:</label><br>
+<input type="number" id="rows" name="rows"><br>
+<label for="cols">列数:</label><br>
+<input type="number" id="cols" name="cols"><br><br>
+<button onclick="generateGrid()">グリッド生成</button><br><br>
+<label for="memo">メモ:</label><br>
+<textarea id="memo" rows="4" cols="50" oninput="countCharacters()"></textarea><br>
+<span id="charCount">0</span> 文字<br>
+<button onclick="insertText()">右巻き</button>
+<button onclick="insertTextReverse()">左巻き</button>
+<button onclick="insertTextVertical()">縦書き</button>
+<button onclick="insertTextZigzag()">ジグザグ</button>
+<br><br> 
+<div id="grid-container" class="grid-container"></div><br>
+
+<button onclick="generateText()">文章生成</button>
+<button onclick="generateTextWithSpaces()">スペース付き文章生成</button><br><br>
+<textarea id="output" rows="4" cols="50" readonly></textarea><br><br>
+<button onclick="copyText()">テキストをコピー</button>
+
+<script>
+function generateGrid() {
+    const rows = document.getElementById('rows').value;
+    const cols = document.getElementById('cols').value;
+    const container = document.getElementById('grid-container');
+
+    // Reset the container
+    container.innerHTML = '';
+    container.style.gridTemplateColumns = `repeat(${cols}, minmax(20px, auto))`; // 修正
+    container.dataset.rows = rows; // 追加
+
+    for (let i = 0; i < rows * cols; i++) {
+        const gridItem = document.createElement('div');
+        gridItem.textContent = ``;
+        gridItem.className = 'grid-item';
+        gridItem.contentEditable = 'true'; // 追加
+        gridItem.oninput = function() { // 追加
+            if(this.textContent.length > 1) {
+                this.textContent = this.textContent.slice(0, 1);
+            }
+        };
+
+        container.appendChild(gridItem);
+    }
+}
+
+function insertText() { // 挿入関数を追加
+    const memo = document.getElementById('memo').value;
+    const container = document.getElementById('grid-container');
+    const rows = container.dataset.rows;
+    const cols = container.children.length / rows;
+    let textIndex = 0;
+    let startRow = 0, endRow = rows - 1;
+    let startCol = 0, endCol = cols - 1;
+
+    while (startRow <= endRow && startCol <= endCol) {
+        for (let i = startCol; i <= endCol; i++) {
+            if(textIndex < memo.length) {
+                container.children[startRow * cols + i].textContent = memo[textIndex++];
+            }
+        }
+        startRow++;
+
+        for (let i = startRow; i <= endRow; i++) {
+            if(textIndex < memo.length) {
+                container.children[i * cols + endCol].textContent = memo[textIndex++];
+            }
+        }
+        endCol--;
+
+        if (startRow <= endRow) {
+            for (let i = endCol; i >= startCol; i--) {
+                if(textIndex < memo.length) {
+                    container.children[endRow * cols + i].textContent = memo[textIndex++];
+                }
+            }
+            endRow--;
+        }
+
+        if (startCol <= endCol) {
+            for (let i = endRow; i >= startRow; i--) {
+                if(textIndex < memo.length) {
+                    container.children[i * cols + startCol].textContent = memo[textIndex++];
+                }
+            }
+            startCol++;
+        }
+    }
+}
+
+function copyText() { // 追加
+    const output = document.getElementById('output');
+    output.select();
+    document.execCommand('copy');
+}
+
+
+function countCharacters() { // 文字数をカウントする関数を追加
+    const memo = document.getElementById('memo').value;
+    const charCount = document.getElementById('charCount');
+    charCount.textContent = memo.length;
+}
+
+function insertTextReverse() { // 左巻き挿入関数を追加
+    const memo = document.getElementById('memo').value;
+    const container = document.getElementById('grid-container');
+    const rows = container.dataset.rows;
+    const cols = container.children.length / rows;
+    let textIndex = 0;
+    let startRow = 0, endRow = rows - 1;
+    let startCol = 0, endCol = cols - 1;
+
+    while (startRow <= endRow && startCol <= endCol) {
+        for (let i = endCol; i >= startCol; i--) {
+            if(textIndex < memo.length) {
+                container.children[startRow * cols + i].textContent = memo[textIndex++];
+            }
+        }
+        startRow++;
+
+        for (let i = startRow; i <= endRow; i++) {
+            if(textIndex < memo.length) {
+                container.children[i * cols + startCol].textContent = memo[textIndex++];
+            }
+        }
+        startCol++;
+
+        if (startRow <= endRow) {
+            for (let i = startCol; i <= endCol; i++) {
+                if(textIndex < memo.length) {
+                    container.children[endRow * cols + i].textContent = memo[textIndex++];
+                }
+            }
+            endRow--;
+        }
+
+        if (startCol <= endCol) {
+            for (let i = endRow; i >= startRow; i--) {
+                if(textIndex < memo.length) {
+                    container.children[i * cols + endCol].textContent = memo[textIndex++];
+                }
+            }
+            endCol--;
+        }
+    }
+}
+
+function insertTextVertical() { // 縦書き挿入関数を追加
+    const memo = document.getElementById('memo').value;
+    const container = document.getElementById('grid-container');
+    const rows = container.dataset.rows;
+    const cols = container.children.length / rows;
+    let textIndex = 0;
+
+    for (let i = cols - 1; i >= 0; i--) {
+        for (let j = 0; j < rows; j++) {
+            if(textIndex < memo.length) {
+                container.children[j * cols + i].textContent = memo[textIndex++];
+            }
+        }
+    }
+}
+
+function insertTextZigzag() { // ジグザグ挿入関数を追加
+    const memo = document.getElementById('memo').value;
+    const container = document.getElementById('grid-container');
+    const rows = container.dataset.rows;
+    const cols = container.children.length / rows;
+    let textIndex = 0;
+
+    for (let i = 0; i < rows; i++) {
+        for (let j = 0; j < cols; j++) {
+            const index = i % 2 === 0 ? j : cols - 1 - j;
+            if(textIndex < memo.length) {
+                container.children[i * cols + index].textContent = memo[textIndex++];
+            }
+        }
+    }
+}
+
+
+
+function generateText() { // generateText関数を修正
+    const container = document.getElementById('grid-container');
+    const output = document.getElementById('output');
+    const rows = parseInt(container.dataset.rows, 10);
+    const cols = parseInt(container.children.length / rows, 10);
+    const items = Array.from(container.getElementsByClassName('grid-item'));
+    let text = '';
+
+    for(let i = 0; i < rows; i++) {
+        for(let j = 0; j < cols; j++) {
+            let content = items[i * cols + j].textContent;
+            if(content === '') {
+                content = '　'; // 全角スペースを挿入
+            }
+            text += content;
+        }
+        if(i < rows - 1) {
+            text += '\n';
+        }
+    }
+
+    output.value = text;
+}
+
+function generateTextWithSpaces() { // スペース付き文章生成関数を修正
+    const container = document.getElementById('grid-container');
+    const output = document.getElementById('output');
+    const rows = parseInt(container.dataset.rows, 10);
+    const cols = parseInt(container.children.length / rows, 10);
+    const items = Array.from(container.getElementsByClassName('grid-item'));
+    let text = '';
+
+    for(let i = 0; i < rows; i++) {
+        for(let j = 0; j < cols; j++) {
+            let content = items[i * cols + j].textContent;
+            if(content === '') {
+                content = '　'; // 全角スペースを挿入
+            }
+            text += content;
+            if(j < cols - 1) {
+                text += '　'; // 列と列の間に全角スペースを挿入
+            }
+        }
+        if(i < rows - 1) {
+            text += '\n　\n'; // 行と行の間に全角スペースを挿入し、さらに空白行を追加
+        }
+    }
+
+    output.value = text;
+}
+
+
+
+</script>
+
+</body>
+</html>
