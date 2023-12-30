@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background-color: #f0f0f0;
+        }
+        .grid-container {
+            display: grid;
+            padding: 0;
+            margin: 20px 0;
+        }
+        .grid-item {
+            border: 1px solid rgba(0, 0, 0, 0.8);
+            width: 50px;
+            height: 50px;
+            background-color: #fff;
+            text-align: center;
+            line-height: 50px;
+        }
+        input, button, textarea {
+            margin: 10px 0;
+        }
+        button {
+            padding: 10px 20px;
+            background-color: #007BFF;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin:10px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        textarea {
+            width: 40%;
+            height: 40%;
+        }
+        .undo-reset{
+        	display:flex;
+        }
+        .area{
+
+        	display:block;
+        }
+    </style>
+</head>
+<body>
+
+<input type="number" id="rows" placeholder="縦">
+<input type="number" id="cols" placeholder="横">
+<button onclick="generateGrid()">生成</button>
+<div class="undo-reset">
+	<button onclick="undo()">1つ戻す</button>
+	<button onclick="reset()">リセット</button>
+</div>
+
+<div id="grid-container" class="grid-container">
+</div>
+
+<div id="char-count">0 文字</div>
+<textarea id="input-text" rows="15" cols="50" oninput="updateCharacterCount()"></textarea>
+<button onclick="reflectText()">反映</button>
+
+<textarea id="output-text" rows="15" cols="50" readonly></textarea>
+<button onclick="outputText()">出力</button>
+
+<script>
+    let clickCount = 0;
+    let clickedItems = [];
+
+    function generateGrid() {
+        let gridContainer = document.getElementById('grid-container');
+        let rows = document.getElementById('rows').value;
+        let cols = document.getElementById('cols').value;
+
+        gridContainer.innerHTML = '';
+        gridContainer.style.gridTemplateColumns = `repeat(${cols}, 50px)`;
+        gridContainer.style.gridTemplateRows = `repeat(${rows}, 50px)`;
+
+        for(let i = 0; i < rows * cols; i++) {
+            let gridItem = document.createElement('div');
+            gridItem.classList.add('grid-item');
+            gridItem.id = 'grid-item-' + i;
+            gridItem.onclick = function() { 
+                this.textContent = ++clickCount; 
+                clickedItems.push(this);
+            };
+            gridContainer.appendChild(gridItem);
+        }
+    }
+
+    function undo() {
+        if (clickedItems.length > 0) {
+            let lastClickedItem = clickedItems.pop();
+            lastClickedItem.textContent = '';
+            clickCount--;
+        }
+    }
+
+    function reset() {
+        let gridItems = document.getElementsByClassName('grid-item');
+        for (let i = 0; i < gridItems.length; i++) {
+            gridItems[i].textContent = '';
+        }
+        clickCount = 0;
+        clickedItems = [];
+    }
+
+    function reflectText() {
+        let inputText = document.getElementById('input-text').value;
+        for (let i = 0; i < clickedItems.length; i++) {
+            if (i < inputText.length) {
+                clickedItems[i].textContent = inputText[i];
+            } else {
+                clickedItems[i].textContent = '';
+            }
+        }
+    }
+
+    function outputText() {
+        let outputText = document.getElementById('output-text');
+        let gridItems = document.getElementsByClassName('grid-item');
+        let text = '';
+        for (let i = 0; i < gridItems.length; i++) {
+            text += gridItems[i].textContent || '　';
+            if ((i + 1) % document.getElementById('cols').value == 0) {
+                text += '\n';
+            }
+        }
+        outputText.value = text;
+    }
+    
+    
+    function updateCharacterCount() {
+        let inputText = document.getElementById('input-text').value;
+        let charCount = document.getElementById('char-count');
+        charCount.textContent = inputText.length + ' 文字';
+    }
+</script>
+
+</body>
+</html>
